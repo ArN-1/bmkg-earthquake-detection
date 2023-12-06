@@ -1,8 +1,11 @@
 # Latest earthquake detection application
 
 import requests
+from bs4 import BeautifulSoup
+
 
 def data_extraction():
+
     try:
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'}
@@ -12,50 +15,58 @@ def data_extraction():
         return None
 
     if content.status_code == 200:
-        print(content.text)
+        soup =  BeautifulSoup(content.text, 'html.parser')
+        result = soup.find('div', {'class': 'col-md-6 col-xs-6 gempabumi-detail no-padding'})
+        result = result.findAll('li')
+
+        i = 0
+        magnitudo = None
+        kedalaman = None
+        koordinat = None
+        pusat = None
+        dirasakan = None
 
 
+        for res in result:
 
-        """
-          tanggal : 02 Desember 2023
-           waktu : 20:42:04 WIB
-          magnitudo : 5.0
-          kedalaman : 108 km
-          lokasi : LS = 3.53 BT =  102.01
-          pusat gempa : Pusat gempa berada di laut 23 km BaratDaya Bengkulu Utara
-          dirasakan : Dirasakan (Skala MMI): II-III Kota Bengkulu, II Mukomuko
-    
-          """
+
+            if i == 0:
+                waktu = res.text.split(', ')
+                tanggal = waktu[0]
+                jam = waktu[1]
+            elif i == 1:
+                magnitudo = res.text
+            elif i == 2:
+                kedalaman = res.text
+            elif i == 3:
+                koordinat = res.text
+
+            elif i == 4:
+                pusat = res.text
+            elif i == 5:
+                dirasakan = res. text
+            i = i + 1
+
         hasil = dict()
-        hasil['tanggal'] = '02 Desember 2023'
-        hasil['waktu'] = '20:42:04 WIB'
-        hasil['magnitudo'] = 5.0
-        hasil['kedalaman'] = '108 km'
-        hasil['lokasi'] = {'ls' : 3.53, 'bt' : 102.01}
-        hasil['pusat'] =  'Pusat gempa berada di laut 23 km BaratDaya Bengkulu Utara'
-        hasil['dirasakan'] =  'Dirasakan (Skala MMI): II-III Kota Bengkulu, II Mukomuko'
+
+        hasil['waktu'] = {'tanggal' : tanggal, 'jam' : jam}
+        hasil['magnitudo'] = magnitudo
+        hasil['kedalaman'] = kedalaman
+        hasil['koordinat'] = koordinat
+        hasil['pusat'] =  pusat
+        hasil['dirasakan'] = dirasakan
         return hasil
     else:
         return None
-
 
 def show_data(result):
   if result is None:
     print("======Cannot find data======")
     return
 
-
-
-  print("Gempa Terakhir berdasarkan BMKG")
-  print(f"tanggal : {result['tanggal']}")
-  print(f"waktu : {result['waktu']}")
-  print(f"waktu : {result['waktu']}")
+  print(f"waktu : {result['waktu']['tanggal']}, {result['waktu']['jam']}")
   print(f"magnitudo : {result['magnitudo']}")
   print(f"kedalaman : {result['kedalaman']}")
-  print(f"lokasi : LS =  {result['lokasi']['ls']}, BT = {result['lokasi']['bt']} ")
+  print(f"koordinat : {result['koordinat']} ")
   print(f"pusat : {result['pusat']}")
   print(f"dirasakan : {result['dirasakan']}")
-
-
-
-
